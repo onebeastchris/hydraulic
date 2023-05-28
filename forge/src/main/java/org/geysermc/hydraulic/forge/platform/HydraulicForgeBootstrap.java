@@ -6,6 +6,7 @@ import org.geysermc.hydraulic.platform.mod.ModInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,7 +19,7 @@ public class HydraulicForgeBootstrap implements HydraulicBootstrap {
                         modInfo.getModId(),
                         modInfo.getVersion().toString(),
                         modInfo.getDisplayName(),
-                        modInfo.getOwningFile().getFile().getFilePath(),
+                        new Path[] { modInfo.getOwningFile().getFile().getFilePath() },
                         modInfo.getLogoFile().orElse("")
                 )
         ).collect(Collectors.toUnmodifiableSet());
@@ -31,7 +32,7 @@ public class HydraulicForgeBootstrap implements HydraulicBootstrap {
                         container.getModId(),
                         container.getModInfo().getVersion().toString(),
                         container.getModInfo().getDisplayName(),
-                        container.getModInfo().getOwningFile().getFile().getFilePath(),
+                        new Path[] { container.getModInfo().getOwningFile().getFile().getFilePath() },
                         container.getModInfo().getLogoFile().orElse("")
                 )
         ).orElse(null);

@@ -5,13 +5,13 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
+import org.geysermc.hydraulic.Constants;
 import org.geysermc.hydraulic.assets.BlockState;
 import org.geysermc.hydraulic.assets.Model;
 import org.geysermc.hydraulic.assets.Variant;
 import org.geysermc.hydraulic.pack.PackModule;
 import org.geysermc.hydraulic.pack.bedrock.resource.textures.TerrainTexture;
 import org.geysermc.hydraulic.pack.context.PackCreateContext;
-import org.geysermc.hydraulic.util.Constants;
 import org.geysermc.hydraulic.util.FileUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,28 +32,36 @@ public class BlockPackModule extends PackModule<BlockPackModule> {
         List<Block> blocks = context.registryValues(Registries.BLOCK);
 
         LOGGER.info("Blocks to convert: " + blocks.size() + " in mod " + context.mod().id());
-        Path jarPath = context.mod().modPath();
-
-        TerrainTexture terrainTexture = new TerrainTexture();
 
         for (Block block : blocks) {
             ResourceLocation blockKey = BuiltInRegistries.BLOCK.getKey(block);
-            Path blockStatePath = jarPath.resolve(String.format(JAVA_BLOCK_STATE_LOCATION, blockKey.getNamespace(), blockKey.getPath()));
+            Path blockStatePath = context.mod().resolve(String.format(JAVA_BLOCK_STATE_LOCATION, blockKey.getNamespace(), blockKey.getPath()));
             try (InputStream blockStateStream = Files.newInputStream(blockStatePath)) {
                 BlockState state = Constants.MAPPER.readValue(blockStateStream, BlockState.class);
-                Variant rootVariant = state.variants().get("");
-                if (rootVariant == null) {
+
+                if (state.variants() == null || state.variants().get("") == null) {
                     // TODO: Handle multi-face block variants
                     continue;
                 }
 
-                ResourceLocation modelPath = rootVariant.model();
-                try (InputStream modelStream = Files.newInputStream(jarPath.resolve(String.format(JAVA_BLOCK_MODEL_LOCATION, modelPath.getNamespace(), modelPath.getPath())))) {
+                ResourceLocation modelPath = state.variants().get("")[0].model();
+                if (modelPath.getNamespace().equals("minecraft")) {
+                    // TODO Parse minecraft models?
+                    continue;
+                }
+
+
+                try (InputStream modelStream = Files.newInputStream(context.mod().resolve(String.format(JAVA_BLOCK_MODEL_LOCATION, modelPath.getNamespace(), modelPath.getPath())))) {
                     Model model = Constants.MAPPER.readValue(modelStream, Model.class);
+
+                    // TODO
+                    if (model.parent() == null) {
+                        continue;
+                    }
 
                     if (!model.parent().getNamespace().equals("minecraft")) {
                         // TODO Parse inherited models?
-                        return;
+                        continue;
                     }
 
                     for (Map.Entry<String, ResourceLocation> texture : model.textures().entrySet()) {

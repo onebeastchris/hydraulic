@@ -94,7 +94,7 @@ public class FileUtil {
      * @param outputPath the path to copy the file to
      */
     public static void copyFileFromMod(ModInfo mod, String filePath, Path outputPath) {
-        Path iconPath = mod.modPath().resolve(filePath);
+        Path iconPath = mod.resolve(filePath);
         if (Files.exists(iconPath)) {
             try {
                 if (Files.notExists(outputPath.getParent())) {

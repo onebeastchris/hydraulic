@@ -9,11 +9,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.*;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineCustomItemsEvent;
 import org.geysermc.geyser.api.item.custom.NonVanillaCustomItemData;
+import org.geysermc.hydraulic.Constants;
 import org.geysermc.hydraulic.assets.Model;
 import org.geysermc.hydraulic.pack.PackModule;
 import org.geysermc.hydraulic.pack.context.PackCreateContext;
 import org.geysermc.hydraulic.pack.context.PackEventContext;
-import org.geysermc.hydraulic.util.Constants;
 import org.geysermc.hydraulic.util.FileUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +34,6 @@ public class ItemPackModule extends PackModule<ItemPackModule> {
         List<Item> items = context.registryValues(Registries.ITEM);
 
         LOGGER.info("Items to convert: " + items.size() + " in mod " + context.mod().id());
-        Path jarPath = context.mod().modPath();
 
         for (Item item : items) {
             if (item instanceof BlockItem) {
@@ -42,8 +41,13 @@ public class ItemPackModule extends PackModule<ItemPackModule> {
             }
             ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(item);
 
-            try (InputStream itemModelStream = Files.newInputStream(jarPath.resolve(String.format(Constants.JAVA_ITEM_MODEL_LOCATION, itemLocation.getNamespace(), itemLocation.getPath())))) {
+            try (InputStream itemModelStream = Files.newInputStream(context.mod().resolve(String.format(Constants.JAVA_ITEM_MODEL_LOCATION, itemLocation.getNamespace(), itemLocation.getPath())))) {
                 Model model = Constants.MAPPER.readValue(itemModelStream, Model.class);
+
+                // TODO Handle things like spawn eggs
+                if (model.textures() == null) {
+                    continue;
+                }
 
                 ResourceLocation layer0 = model.textures().get("layer0");
 
@@ -74,6 +78,11 @@ public class ItemPackModule extends PackModule<ItemPackModule> {
 
         DefaultedRegistry<Item> registry = BuiltInRegistries.ITEM;
         for (Item item : items) {
+            // Handled when registering blocks
+            if (item instanceof BlockItem) {
+                continue;
+            }
+
             String name = Language.getInstance().getOrDefault(item.getDescriptionId());
             ResourceLocation itemLocation = registry.getKey(item);
             NonVanillaCustomItemData.Builder customItemBuilder = NonVanillaCustomItemData.builder()

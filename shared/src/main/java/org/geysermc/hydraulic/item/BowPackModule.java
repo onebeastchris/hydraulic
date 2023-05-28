@@ -5,6 +5,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BowItem;
+import org.geysermc.hydraulic.Constants;
 import org.geysermc.hydraulic.assets.Model;
 import org.geysermc.hydraulic.assets.ModelOverride;
 import org.geysermc.hydraulic.pack.PackModule;
@@ -15,7 +16,6 @@ import org.geysermc.hydraulic.pack.bedrock.resource.attachables.attachable.descr
 import org.geysermc.hydraulic.pack.bedrock.resource.render_controllers.RenderControllers;
 import org.geysermc.hydraulic.pack.bedrock.resource.render_controllers.rendercontrollers.Arrays;
 import org.geysermc.hydraulic.pack.context.PackCreateContext;
-import org.geysermc.hydraulic.util.Constants;
 import org.geysermc.hydraulic.util.FileUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -68,7 +68,6 @@ public class BowPackModule extends PackModule<BowPackModule> {
         List<BowItem> bowItems = context.registryValues(Registries.ITEM).stream().filter(item -> item instanceof BowItem).map(item -> (BowItem)item).toList();
 
         LOGGER.info("Bows to convert: " + bowItems.size() + " in mod " + context.mod().id());
-        Path jarPath = context.mod().modPath();
 
         for (BowItem bowItem : bowItems) {
             ResourceLocation bowLocation = BuiltInRegistries.ITEM.getKey(bowItem);
@@ -79,7 +78,7 @@ public class BowPackModule extends PackModule<BowPackModule> {
             };
 
 
-            try (InputStream itemModelStream = Files.newInputStream(jarPath.resolve(String.format(Constants.JAVA_ITEM_MODEL_LOCATION, bowLocation.getNamespace(), bowLocation.getPath())))) {
+            try (InputStream itemModelStream = Files.newInputStream(context.mod().resolve(String.format(Constants.JAVA_ITEM_MODEL_LOCATION, bowLocation.getNamespace(), bowLocation.getPath())))) {
                 Model model = Constants.MAPPER.readValue(itemModelStream, Model.class);
 
                 String defaultOutputLoc = String.format(Constants.BEDROCK_ITEM_TEXTURE_LOCATION, context.mod().id(), model.textures().get("layer0").getPath().replace("item/", ""));
@@ -87,7 +86,7 @@ public class BowPackModule extends PackModule<BowPackModule> {
 
                 for (ModelOverride override : model.overrides()) {
                     if (override.predicate().get("pulling") == 1) {
-                        try (InputStream pullingModelStream = Files.newInputStream(jarPath.resolve(String.format(Constants.JAVA_ITEM_MODEL_LOCATION, override.model().getNamespace(), override.model().getPath().replace("item/", ""))))) {
+                        try (InputStream pullingModelStream = Files.newInputStream(context.mod().resolve(String.format(Constants.JAVA_ITEM_MODEL_LOCATION, override.model().getNamespace(), override.model().getPath().replace("item/", ""))))) {
                             Model pullingModel = Constants.MAPPER.readValue(pullingModelStream, Model.class);
                             ResourceLocation layer0 = pullingModel.textures().get("layer0");
 
@@ -109,12 +108,6 @@ public class BowPackModule extends PackModule<BowPackModule> {
             } catch (Exception ex) {
                 LOGGER.error("Failed to read bow item model {} for mod {}", bowLocation.toString(), context.mod().id(), ex);
             }
-
-//            String inputFileNamePrefix = "assets/minecraft/textures/models/armor/" + armorItem.getMaterial().getName();
-//            String outputFileNamePrefix = "textures/models/armor/" + context.mod().id() + "/" + armorItem.getMaterial().getName();
-
-//            FileUtil.copyFileFromMod(context.mod(), inputFileNamePrefix + "_layer_1.png", context.path().resolve(outputFileNamePrefix + "_layer_1.png"));
-//            FileUtil.copyFileFromMod(context.mod(), inputFileNamePrefix + "_layer_2.png", context.path().resolve(outputFileNamePrefix + "_layer_2.png"));
 
             Attachables armorAttachable = new Attachables();
             armorAttachable.setFormatVersion("1.10.0");

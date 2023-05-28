@@ -3,11 +3,11 @@ package org.geysermc.hydraulic.item;
 import net.minecraft.world.item.*;
 import org.geysermc.geyser.api.item.custom.NonVanillaCustomItemData;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CreativeMappings {
-    private static Map<Class<? extends Item>, CreativeMapping> CREATIVE_MAPPINGS = new HashMap<>() {
+    private static Map<Class<? extends Item>, CreativeMapping> CREATIVE_MAPPINGS = new LinkedHashMap<>() { // Linked to preserve order to allow for fallbacks
         {
             put(ArmorItem.class, new CreativeMapping(CreativeCategory.EQUIPMENT));
             put(ArrowItem.class, new CreativeMapping("itemGroup.name.arrow", CreativeCategory.EQUIPMENT));
